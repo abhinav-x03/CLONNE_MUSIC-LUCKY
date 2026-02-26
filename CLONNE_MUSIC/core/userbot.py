@@ -1,7 +1,5 @@
 from pyrogram import Client
-from CLONNE_MUSIC.utils.database.clonedb import get_assistant
-from config import API_ID, API_HASH
-from pyrogram import Client
+
 import config
 
 from ..logging import LOGGER
@@ -9,23 +7,6 @@ from ..logging import LOGGER
 assistants = []
 assistantids = []
 
-async def start_userbot(user_id):
-
-    string = await get_assistant(user_id)
-
-    if not string:
-        return
-
-    assistant = Client(
-        string,
-        api_id=API_ID,
-        api_hash=API_HASH,
-        device_model="CLONNE_MUSIC Assistant",
-        system_version="v2",
-        app_version="Assistant Login"
-    )
-
-    await assistant.start()
 class Userbot(Client):
     def __init__(self):
         self.one = Client(
