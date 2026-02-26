@@ -6,20 +6,18 @@ from CLONNE_MUSIC.utils.database.clonedb import save_assistant
 @app.on_message(filters.command("otp") & filters.private)
 async def otp_verify(client, message):
 
-    user_id = message.from_user.id
+    bot = await client.get_me()
+    bot_id = bot.id
 
-    if user_id not in login_sessions:
-        return await message.reply_text("❌ Use /connect first.")
+    if bot_id not in login_sessions:
+        return await message.reply_text("Use /connect first ❌")
 
-    data = login_sessions[user_id]
+    data = login_sessions[bot_id]
     assistant = data["client"]
     phone = data["phone"]
     phone_code_hash = data["phone_code_hash"]
 
-    if len(message.command) < 2:
-        return await message.reply_text("Usage:\n/otp 1 2 3 4 5")
-
-    otp = "".join(message.command[1:])  # supports spaced OTP
+    otp = "".join(message.command[1:])
 
     await assistant.sign_in(
         phone_number=phone,
@@ -29,9 +27,9 @@ async def otp_verify(client, message):
 
     string_session = await assistant.export_session_string()
 
-    await save_assistant(user_id, string_session)
+    await save_assistant(bot_id, string_session)
 
-    await message.reply_text("✅ Assistant Logged In!\nOld Assistant Replaced.")
+    await message.reply_text("Assistant Connected ✅")
 
     await assistant.disconnect()
-    del login_sessions[user_id]
+    del login_sessions[bot_id]
