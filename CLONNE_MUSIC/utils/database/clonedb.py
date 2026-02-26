@@ -9,7 +9,18 @@ clonebotnamedb = mongodb.clonebotnamedb
 # clone bot owner
 async def save_clonebot_owner(bot_id, user_id):
     await cloneownerdb.insert_one({"bot_id": bot_id, "user_id": user_id})
+async def save_assistant(user_id, string):
+    clonebotdb.update_one(
+        {"user_id": user_id},
+        {"$set": {"assistant_string": string}},
+        upsert=True
+    )
 
+async def get_assistant(user_id):
+    data = clonebotdb.find_one({"user_id": user_id})
+    if data:
+        return data.get("assistant_string")
+    return None
 
 async def get_clonebot_owner(bot_id):
     result = await cloneownerdb.find_one({"bot_id": bot_id})
