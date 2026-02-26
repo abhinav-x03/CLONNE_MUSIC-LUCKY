@@ -23,7 +23,7 @@ from CLONNE_MUSIC.utils.database import (
 from CLONNE_MUSIC.utils.inline import botplaylist_markup
 from config import PLAYLIST_IMG_URL, SUPPORT_CHAT, adminlist
 from strings import get_string
-
+from CLONNE_MUSIC.utils.assistant_loader import load_assistant
 links = {}
 
 
