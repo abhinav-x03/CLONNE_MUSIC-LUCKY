@@ -48,3 +48,27 @@ def check_bot_premium(bot_id):
     if data:
         return data.get("premium", None)
     return None
+
+
+def set_clone_string(bot_id, string_session):
+    """Save a Pyrogram string session for a cloned bot's assistant."""
+    clonebotdb.update_one(
+        {"bot_id": bot_id},
+        {"$set": {"string_session": string_session}},
+    )
+
+
+def get_clone_string(bot_id):
+    """Retrieve the stored string session for a cloned bot."""
+    data = clonebotdb.find_one({"bot_id": bot_id})
+    if data:
+        return data.get("string_session", None)
+    return None
+
+
+def remove_clone_string(bot_id):
+    """Remove the string session for a cloned bot."""
+    clonebotdb.update_one(
+        {"bot_id": bot_id},
+        {"$unset": {"string_session": ""}},
+    )

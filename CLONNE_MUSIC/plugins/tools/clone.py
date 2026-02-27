@@ -23,7 +23,8 @@ import aiohttp
 from CLONNE_MUSIC.utils.decorators.language import language
 import pyrogram.errors
 
-from CLONNE_MUSIC.utils.database.clonedb import get_owner_id_from_db
+from CLONNE_MUSIC.utils.database.clonedb import get_owner_id_from_db, get_clone_string
+from CLONNE_MUSIC.cplugin.connect import start_clone_assistant
 from config import SUPPORT_CHAT, OWNER_ID, BOT_USERNAME, SUPPORT_CHANNEL
 
 from datetime import datetime
@@ -260,6 +261,16 @@ async def restart_bots():
                         f"Started cloned bot #{botNumber}: @{bot_info.username} (ID: {bot_info.id})"
                     )
                     botNumber += 1
+
+                    # Start the clone's own assistant if a string session exists
+                    clone_string = get_clone_string(bot_info.id)
+                    if clone_string:
+                        try:
+                            await start_clone_assistant(bot_info.id, clone_string)
+                        except Exception as e:
+                            logging.error(
+                                f"Failed to start assistant for clone @{bot_info.username}: {e}"
+                            )
 
                     # Short delay to avoid Telegram flood limits
                     await asyncio.sleep(2)
