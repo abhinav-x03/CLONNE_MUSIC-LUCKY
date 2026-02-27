@@ -1,6 +1,6 @@
 from CLONNE_MUSIC.core.mongo import mongodb, pymongodb
 from typing import Dict, List, Union
-
+from CLONNE_MUSIC.utils.database import clonebotdb
 cloneownerdb = mongodb.cloneownerdb
 clonebotdb.insert_one({
     "user_id": user_id,
