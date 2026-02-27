@@ -12,6 +12,7 @@ authuser = db.authuser
 blacklist = db.blacklist
 sudoers = db.sudoers
 langdb = db.lang
+votedb = db.votes
 
 # ===== CMODE =====
 async def get_cmode(chat_id):
@@ -90,5 +91,27 @@ async def save_authuser_name(chat_id, name):
     authuser.update_one(
         {"chat_id": chat_id},
         {"$addToSet": {"names": name}},
+        upsert=True
+    )
+    # ===== VOTES =====
+async def get_upvote_count(chat_id):
+    data = votedb.find_one({"chat_id": chat_id})
+    return data.get("upvotes", 0) if data else 0
+
+async def get_downvote_count(chat_id):
+    data = votedb.find_one({"chat_id": chat_id})
+    return data.get("downvotes", 0) if data else 0
+
+async def add_upvote(chat_id):
+    votedb.update_one(
+        {"chat_id": chat_id},
+        {"$inc": {"upvotes": 1}},
+        upsert=True
+    )
+
+async def add_downvote(chat_id):
+    votedb.update_one(
+        {"chat_id": chat_id},
+        {"$inc": {"downvotes": 1}},
         upsert=True
     )
