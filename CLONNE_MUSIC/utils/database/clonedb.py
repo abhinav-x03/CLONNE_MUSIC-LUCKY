@@ -2,7 +2,10 @@ from CLONNE_MUSIC.core.mongo import mongodb, pymongodb
 from typing import Dict, List, Union
 
 cloneownerdb = mongodb.cloneownerdb
-clonebotdb = pymongodb.clonebotdb
+clonebotdb.insert_one({
+    "user_id": user_id,
+    "bot_token": bot_token
+})
 clonebotnamedb = mongodb.clonebotnamedb
 
 
