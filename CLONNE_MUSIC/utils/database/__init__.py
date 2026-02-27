@@ -11,6 +11,7 @@ assistant = db.assistant
 authuser = db.authuser
 blacklist = db.blacklist
 sudoers = db.sudoers
+langdb = db.lang
 
 # ===== CMODE =====
 async def get_cmode(chat_id):
@@ -65,6 +66,17 @@ async def add_authuser(chat_id, user_id):
     authuser.update_one(
         {"chat_id": chat_id},
         {"$addToSet": {"users": user_id}},
+        upsert=True
+    )
+    # ===== LANGUAGE =====
+async def get_lang(chat_id):
+    data = langdb.find_one({"chat_id": chat_id})
+    return data.get("lang") if data else "en"
+
+async def set_lang(chat_id, lang):
+    langdb.update_one(
+        {"chat_id": chat_id},
+        {"$set": {"lang": lang}},
         upsert=True
     )
 
