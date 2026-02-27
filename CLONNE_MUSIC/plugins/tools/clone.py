@@ -312,7 +312,7 @@ async def list_cloned_bots(client, message, _):
                     owner_name = "Unknown User"
                     owner_profile_link = "#"
 
-                chunk_text += f"**Bᴏᴛ ID:** `{bot['bot_id']}`\n"
+                chunk_text += f"**Bᴏᴛ ID:** `{bot.get('bot_id', 'Unknown')}`\n"
                 chunk_text += f"**Bᴏᴛ Nᴀᴍᴇ:** {bot['name']}\n"
                 chunk_text += f"**Bᴏᴛ Usᴇʀɴᴀᴍᴇ:** @{bot['username']}\n"
                 chunk_text += f"**Oᴡɴᴇʀ:** [{owner_name}]({owner_profile_link})\n\n"
