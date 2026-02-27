@@ -19,6 +19,7 @@ from CLONNE_MUSIC.utils.database import get_assistant, clonebotdb
 from CLONNE_MUSIC.utils.database.clonedb import has_user_cloned_any_bot
 from config import LOGGER_ID, CLONE_LOGGER
 import requests
+import aiohttp
 from CLONNE_MUSIC.utils.decorators.language import language
 import pyrogram.errors
 
@@ -64,11 +65,12 @@ async def clone_txt(client, message, _):
         mi = await message.reply_text(_["C_B_H_2"])
         try:
             ai = Client(
-                bot_token,
+                f"clone_new_{message.from_user.id}",
                 API_ID,
                 API_HASH,
                 bot_token=bot_token,
-                plugins=dict(root="CLONNE_MUSIC.cplugin"), 
+                plugins=dict(root="CLONNE_MUSIC.cplugin"),
+                in_memory=True,
             )
             await ai.start()
             bot = await ai.get_me()
@@ -192,54 +194,100 @@ async def delete_cloned_bot(client, message, _):
         logging.exception(e)
 
 
+async def _validate_token(session, bot_token):
+    """Validate a bot token using aiohttp (non-blocking)."""
+    url = f"https://api.telegram.org/bot{bot_token}/getMe"
+    try:
+        async with session.get(url, timeout=aiohttp.ClientTimeout(total=15)) as resp:
+            return resp.status == 200
+    except Exception:
+        return False
+
+
 async def restart_bots():
     global CLONES
     try:
         logging.info("Restarting all cloned bots........")
         bots = list(clonebotdb.find())
+        if not bots:
+            logging.info("No cloned bots found in database.")
+            return
+
         botNumber = 1
         failed = 0
-        for bot in bots:
-            bot_token = bot["token"]
-            try:
-                url = f"https://api.telegram.org/bot{bot_token}/getMe"
-                response = requests.get(url, timeout=10)
-                if response.status_code != 200:
-                    logging.error(f"Invalid or expired token for bot: {bot_token}")
-                    clonebotdb.delete_one({"token": bot_token})
+
+        async with aiohttp.ClientSession() as session:
+            for bot in bots:
+                bot_token = bot.get("token")
+                bot_username = bot.get("username", "unknown")
+                bot_id = bot.get("bot_id", "unknown")
+
+                if not bot_token:
+                    logging.error(f"No token found for bot: {bot_username}, skipping")
                     failed += 1
                     continue
 
-                ai = Client(
-                    f"{bot_token}",
-                    API_ID,
-                    API_HASH,
-                    bot_token=bot_token,
-                    plugins=dict(root="CLONNE_MUSIC.cplugin"),
-                )
-                await ai.start()
-                logging.info(f"Started cloned bot #{botNumber}: {bot.get('username', 'unknown')}")
-                botNumber += 1
+                try:
+                    # Validate token without blocking the event loop
+                    is_valid = await _validate_token(session, bot_token)
+                    if not is_valid:
+                        logging.error(
+                            f"Invalid or expired token for bot: {bot_username} (ID: {bot_id}), removing from DB"
+                        )
+                        clonebotdb.delete_one({"token": bot_token})
+                        failed += 1
+                        continue
 
-                bot_info = await ai.get_me()
-                if bot_info.id not in CLONES:
-                    CLONES.add(bot_info.id)
+                    # Use bot_id or sanitized name for session to avoid
+                    # filesystem issues with ':' in bot tokens, and use
+                    # in_memory to prevent stale session file conflicts
+                    # after a kill -9 restart.
+                    session_name = f"clone_{bot_id}"
+                    ai = Client(
+                        session_name,
+                        API_ID,
+                        API_HASH,
+                        bot_token=bot_token,
+                        plugins=dict(root="CLONNE_MUSIC.cplugin"),
+                        in_memory=True,
+                    )
+                    await ai.start()
+                    bot_info = await ai.get_me()
+                    if bot_info.id not in CLONES:
+                        CLONES.add(bot_info.id)
 
-                await asyncio.sleep(5)
-            except (AccessTokenExpired, AccessTokenInvalid):
-                logging.error(f"Token expired/invalid for bot: {bot.get('username', 'unknown')}, removing from DB")
-                clonebotdb.delete_one({"token": bot_token})
-                failed += 1
-            except Exception as e:
-                logging.exception(f"Failed to restart cloned bot: {bot.get('username', 'unknown')} - {e}")
-                failed += 1
-                continue
+                    logging.info(
+                        f"Started cloned bot #{botNumber}: @{bot_info.username} (ID: {bot_info.id})"
+                    )
+                    botNumber += 1
+
+                    # Short delay to avoid Telegram flood limits
+                    await asyncio.sleep(2)
+
+                except (AccessTokenExpired, AccessTokenInvalid):
+                    logging.error(
+                        f"Token expired/invalid for bot: {bot_username}, removing from DB"
+                    )
+                    clonebotdb.delete_one({"token": bot_token})
+                    failed += 1
+                except Exception as e:
+                    logging.exception(
+                        f"Failed to restart cloned bot: {bot_username} - {e}"
+                    )
+                    failed += 1
+                    continue
 
         started = botNumber - 1
-        await app.send_message(
-            CLONE_LOGGER,
-            f"All Cloned Bots Restart Complete!\n\nStarted: {started}\nFailed: {failed}\nTotal: {len(bots)}",
+        logging.info(
+            f"Clone restart complete - Started: {started}, Failed: {failed}, Total: {len(bots)}"
         )
+        try:
+            await app.send_message(
+                CLONE_LOGGER,
+                f"All Cloned Bots Restart Complete!\n\nStarted: {started}\nFailed: {failed}\nTotal: {len(bots)}",
+            )
+        except Exception as e:
+            logging.error(f"Failed to send restart summary to CLONE_LOGGER: {e}")
     except Exception as e:
         logging.exception("Error while restarting bots.")
 
