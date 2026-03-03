@@ -42,7 +42,7 @@ async def ping_clone(client: Client, message: Message):
 ๏ **ᴜᴩᴛɪᴍᴇ :** {uptime}
 ๏ **ʀᴀᴍ :** {mem}
 ๏ **ᴄᴩᴜ :** {cpu}
-๏ **ᴅɪsᴋ :** {disk}""",
+๏ **ᴅɪsᴋ :** {disk}</blockquote>""",
         reply_markup=InlineKeyboardMarkup(
             [
                 [InlineKeyboardButton("sᴜᴘᴘᴏʀᴛ", url=C_SUPPORT_CHAT)],
