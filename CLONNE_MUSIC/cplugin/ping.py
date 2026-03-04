@@ -35,7 +35,7 @@ async def ping_clone(client: Client, message: Message):
     uptime = get_readable_time((upt))
 
     await hmm.edit_text(
-        f"""➻ ᴩᴏɴɢ : `{0}ᴍs`
+        f"""➻ ᴩᴏɴɢ : `{resp}ᴍs`
 
 <blockquote expandable><b><u>{bot.mention} sʏsᴛᴇᴍ sᴛᴀᴛs :</u></b>
 
