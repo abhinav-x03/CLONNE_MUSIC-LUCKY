@@ -99,8 +99,8 @@ async def clone_txt(client, message, _):
                 "name": bot.first_name,
                 "token": bot_token,
                 "username": bot.username,
-                "channel": "Abhinav_repo",
-                "support": "AbhinavXSupport",
+                "channel": "AbhinavXupdate",
+                "support": "Abhinav_Chatgroup",
                 "premium" : False,
                 "Date" : False,
             }
