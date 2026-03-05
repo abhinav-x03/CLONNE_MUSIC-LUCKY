@@ -25,13 +25,13 @@ ASSUSERNAME = getenv("ASSUSERNAME" , "")
 # ---------------------------------------------------------
 # Vars For API End Pont.
 YTPROXY_URL = getenv("YTPROXY_URL", 'https://tgapi.xbitcode.com') ## 
-YT_API_KEY = getenv("YT_API_KEY" , 'xbit_CD0721D6CTWKQEYHZ1BGEI') 
+YT_API_KEY = getenv("YT_API_KEY" , 'xbit_ym59-ALejEBQZezl97zGvLhLrk8rJ4hX') 
 COOKIES_URL=getenv("COOKIES_URL" , "https://gist.githubusercontent.com/sparrow9616/f29fc6588086a3c72d92dd9c03773350/raw/4229f3f4aab4a6693fc0794d136d30f54d67ae85/gistfile1.txt")
 
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 MONGO_DB_URI = getenv("MONGO_DB_URI")
-API_KEY = getenv("xbit_CD0721D6CTWKQEYHZ1BGEI")
+API_KEY = getenv("xbit_ym59-ALejEBQZezl97zGvLhLrk8rJ4hX")
 
 #---------------------------------------------------------------
 #---------------------------------------------------------------
