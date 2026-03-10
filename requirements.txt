@@ -74,7 +74,7 @@ flask
 # --- Official Core Libraries ---
 yt-dlp>=2024.11.0
 pyrogram==2.0.106
-pytgcalls==2.2.11
+py-tgcalls==2.2.11
 tgcrypto
 opencv-python-headless
 TgCrypto  # Isse speed tez hoti hai
