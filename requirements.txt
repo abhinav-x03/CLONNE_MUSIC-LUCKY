@@ -74,7 +74,7 @@ flask
 # --- Official Core Libraries ---
 yt-dlp>=2024.11.0
 pyrogram==2.0.106
-pytgcalls==3.0.0.dev24
+py-tgcalls==0.9.7
 tgcrypto
 opencv-python-headless
 yt-dlp
