@@ -6,7 +6,8 @@ from pyrogram.types import Message
 from pyrogram.errors import SessionPasswordNeeded
 
 from config import API_ID, API_HASH, OWNER_ID
-from pyrogram.sessions import StringSession
+from pyrogram import Client
+from pyrogram.session import StringSession
 
 from CLONNE_MUSIC.utils.database.clonedb import (
     get_owner_id_from_db,
