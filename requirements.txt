@@ -74,9 +74,18 @@ flask
 # --- Official Core Libraries ---
 yt-dlp>=2024.11.0
 pyrogram==2.0.106
-py-tgcalls==2.2.11
-tgcrypto
+tgcrypto==1.2.5
+py-tgcalls==2.1.0
+yt-dlp
+ffmpeg-python
 opencv-python-headless
+numpy
+requests
+aiohttp
+motor
+dnspython
+python-dotenv
+pillow
 TgCrypto  # Isse speed tez hoti hai
 
 # --- Support Libraries ---
