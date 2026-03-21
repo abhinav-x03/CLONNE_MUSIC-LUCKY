@@ -11,10 +11,14 @@ from pytgcalls.exceptions import (
     NoActiveGroupCall,
     TelegramServerError,
 )
+from pytgcalls.pytgcalls_session import PyTgCallsSession
 from pytgcalls.types import Update
 from pytgcalls.types.input_stream import AudioPiped, AudioVideoPiped
 from pytgcalls.types.input_stream.quality import HighQualityAudio, MediumQualityVideo
 from pytgcalls.types.stream import StreamAudioEnded
+
+# Suppress PyTgCalls update check notification on startup
+PyTgCallsSession.notice_displayed = True
 
 import config
 from CLONNE_MUSIC import LOGGER, YouTube, app
