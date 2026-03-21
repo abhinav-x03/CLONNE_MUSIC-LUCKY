@@ -8,6 +8,7 @@ from CLONNE_MUSIC.utils import AdminRightsCheck
 from CLONNE_MUSIC.utils.database import is_active_chat, is_nonadmin_chat
 from CLONNE_MUSIC.utils.decorators.language import languageCB
 from CLONNE_MUSIC.utils.inline import close_markup, speed_markup
+from CLONNE_MUSIC.cplugin.connect import get_clone_pytgcalls
 from config import BANNED_USERS, adminlist
 
 checker = []
@@ -85,12 +86,15 @@ async def del_back_playlist(client, callback_query, _):
         callback_query.message.chat.id,
         text=_["admin_32"].format(callback_query.from_user.mention),
     )
+    bot = await client.get_me()
+    clone_ptc = get_clone_pytgcalls(bot.id)
     try:
         await LUCKY.speedup_stream(
             chat_id,
             file_path,
             speed,
             playing,
+            clone_pytgcalls=clone_ptc,
         )
     except:
         if chat_id in checker:

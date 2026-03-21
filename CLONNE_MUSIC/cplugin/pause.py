@@ -4,6 +4,7 @@ from CLONNE_MUSIC import app
 from CLONNE_MUSIC.core.call import LUCKY
 from CLONNE_MUSIC.utils.decorators import AdminRightsCheck
 from CLONNE_MUSIC.utils.inline import close_markup
+from CLONNE_MUSIC.cplugin.connect import get_clone_pytgcalls
 from config import BANNED_USERS
 import random
 from typing import Dict, List, Union
@@ -79,7 +80,9 @@ async def music_off(chat_id: int):
 async def pause_admin(cli, message: Message, _, chat_id):
 
     await music_off(chat_id)
-    await LUCKY.pause_stream(chat_id)
+    bot = await cli.get_me()
+    clone_ptc = get_clone_pytgcalls(bot.id)
+    await LUCKY.pause_stream(chat_id, clone_pytgcalls=clone_ptc)
 
     buttons = [
         [

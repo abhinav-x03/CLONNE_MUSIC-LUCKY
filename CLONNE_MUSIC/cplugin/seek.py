@@ -6,6 +6,7 @@ from CLONNE_MUSIC.core.call import LUCKY
 from CLONNE_MUSIC.misc import db
 from CLONNE_MUSIC.utils import AdminRightsCheck, seconds_to_min
 from CLONNE_MUSIC.utils.inline import close_markup
+from CLONNE_MUSIC.cplugin.connect import get_clone_pytgcalls
 from config import BANNED_USERS
 
 
@@ -55,6 +56,8 @@ async def seek_comm(cli, message: Message, _, chat_id):
         file_path = check
     if "index_" in file_path:
         file_path = playing[0]["vidid"]
+    bot = await cli.get_me()
+    clone_ptc = get_clone_pytgcalls(bot.id)
     try:
         await LUCKY.seek_stream(
             chat_id,
@@ -62,6 +65,7 @@ async def seek_comm(cli, message: Message, _, chat_id):
             seconds_to_min(to_seek),
             duration,
             playing[0]["streamtype"],
+            clone_pytgcalls=clone_ptc,
         )
     except:
         return await mystic.edit_text(_["admin_26"], reply_markup=close_markup(_))
