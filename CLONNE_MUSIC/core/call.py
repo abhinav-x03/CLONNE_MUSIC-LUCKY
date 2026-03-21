@@ -61,16 +61,25 @@ class Call(PyTgCalls):
             cache_duration=150,
         )
 
-    async def pause_stream(self, chat_id: int):
-        assistant = await group_assistant(self, chat_id)
+    async def pause_stream(self, chat_id: int, clone_pytgcalls=None):
+        if clone_pytgcalls:
+            assistant = clone_pytgcalls
+        else:
+            assistant = await group_assistant(self, chat_id)
         await assistant.pause_stream(chat_id)
 
-    async def resume_stream(self, chat_id: int):
-        assistant = await group_assistant(self, chat_id)
+    async def resume_stream(self, chat_id: int, clone_pytgcalls=None):
+        if clone_pytgcalls:
+            assistant = clone_pytgcalls
+        else:
+            assistant = await group_assistant(self, chat_id)
         await assistant.resume_stream(chat_id)
 
-    async def stop_stream(self, chat_id: int):
-        assistant = await group_assistant(self, chat_id)
+    async def stop_stream(self, chat_id: int, clone_pytgcalls=None):
+        if clone_pytgcalls:
+            assistant = clone_pytgcalls
+        else:
+            assistant = await group_assistant(self, chat_id)
         try:
             await _clear_(chat_id)
             await assistant.leave_group_call(chat_id)
@@ -88,8 +97,11 @@ class Call(PyTgCalls):
         except:
             pass
 
-    async def speedup_stream(self, chat_id: int, file_path, speed, playing):
-        assistant = await group_assistant(self, chat_id)
+    async def speedup_stream(self, chat_id: int, file_path, speed, playing, clone_pytgcalls=None):
+        if clone_pytgcalls:
+            assistant = clone_pytgcalls
+        else:
+            assistant = await group_assistant(self, chat_id)
         if str(speed) != str("1.0"):
             base = os.path.basename(file_path)
             chatdir = os.path.join(os.getcwd(), "playback", str(speed))
@@ -157,8 +169,11 @@ class Call(PyTgCalls):
             db[chat_id][0]["speed_path"] = out
             db[chat_id][0]["speed"] = speed
 
-    async def force_stop_stream(self, chat_id: int):
-        assistant = await group_assistant(self, chat_id)
+    async def force_stop_stream(self, chat_id: int, clone_pytgcalls=None):
+        if clone_pytgcalls:
+            assistant = clone_pytgcalls
+        else:
+            assistant = await group_assistant(self, chat_id)
         try:
             check = db.get(chat_id)
             check.pop(0)
@@ -177,8 +192,12 @@ class Call(PyTgCalls):
         link: str,
         video: Union[bool, str] = None,
         image: Union[bool, str] = None,
+        clone_pytgcalls=None,
     ):
-        assistant = await group_assistant(self, chat_id)
+        if clone_pytgcalls:
+            assistant = clone_pytgcalls
+        else:
+            assistant = await group_assistant(self, chat_id)
         if video:
             stream = AudioVideoPiped(
                 link,
@@ -192,8 +211,11 @@ class Call(PyTgCalls):
             stream,
         )
 
-    async def seek_stream(self, chat_id, file_path, to_seek, duration, mode):
-        assistant = await group_assistant(self, chat_id)
+    async def seek_stream(self, chat_id, file_path, to_seek, duration, mode, clone_pytgcalls=None):
+        if clone_pytgcalls:
+            assistant = clone_pytgcalls
+        else:
+            assistant = await group_assistant(self, chat_id)
         stream = (
             AudioVideoPiped(
                 file_path,
@@ -227,8 +249,12 @@ class Call(PyTgCalls):
         link,
         video: Union[bool, str] = None,
         image: Union[bool, str] = None,
+        clone_pytgcalls=None,
     ):
-        assistant = await group_assistant(self, chat_id)
+        if clone_pytgcalls:
+            assistant = clone_pytgcalls
+        else:
+            assistant = await group_assistant(self, chat_id)
         language = await get_lang(chat_id)
         _ = get_string(language)
         if video:

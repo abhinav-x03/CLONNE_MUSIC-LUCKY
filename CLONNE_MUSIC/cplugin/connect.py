@@ -6,8 +6,10 @@ from pyrogram.types import Message
 from pyrogram.errors import SessionPasswordNeeded
 
 from config import API_ID, API_HASH, OWNER_ID
-from pyrogram import Client
+from pytgcalls import PyTgCalls, StreamType
 from pytgcalls.exceptions import NoActiveGroupCall
+from pytgcalls.types import Update
+from pytgcalls.types.stream import StreamAudioEnded
 
 from CLONNE_MUSIC.utils.database.clonedb import (
     get_owner_id_from_db,
@@ -18,14 +20,20 @@ from CLONNE_MUSIC.utils.database.clonedb import (
 
 from CLONNE_MUSIC.utils.decorators.language import language
 
+# bot_id -> {"userbot": Client, "pytgcalls": PyTgCalls}
 clone_assistants = {}
 
 
 async def start_clone_assistant(bot_id, string_session):
+    """Start a clone assistant with both Pyrogram client and PyTgCalls."""
 
     if bot_id in clone_assistants:
         try:
-            await clone_assistants[bot_id].stop()
+            old = clone_assistants[bot_id]
+            if old.get("pytgcalls"):
+                await old["pytgcalls"].stop()
+            if old.get("userbot"):
+                await old["userbot"].stop()
         except:
             pass
 
@@ -46,7 +54,17 @@ async def start_clone_assistant(bot_id, string_session):
         userbot.username = me.username
         userbot.name = me.mention
 
-        clone_assistants[bot_id] = userbot
+        # Create PyTgCalls instance for voice chat support
+        pytgcalls = PyTgCalls(userbot, cache_duration=150)
+        await pytgcalls.start()
+
+        # Register stream end and leave event handlers
+        _register_clone_handlers(bot_id, pytgcalls)
+
+        clone_assistants[bot_id] = {
+            "userbot": userbot,
+            "pytgcalls": pytgcalls,
+        }
 
         return userbot
 
@@ -55,11 +73,39 @@ async def start_clone_assistant(bot_id, string_session):
         return None
 
 
+def _register_clone_handlers(bot_id, pytgcalls):
+    """Register stream end/leave/kicked handlers on a clone's PyTgCalls."""
+    from CLONNE_MUSIC.core.call import LUCKY
+
+    @pytgcalls.on_kicked()
+    @pytgcalls.on_closed_voice_chat()
+    @pytgcalls.on_left()
+    async def clone_stream_services_handler(_, chat_id: int):
+        try:
+            await LUCKY.stop_stream(chat_id, clone_pytgcalls=pytgcalls)
+        except:
+            pass
+
+    @pytgcalls.on_stream_end()
+    async def clone_stream_end_handler(client, update: Update):
+        if not isinstance(update, StreamAudioEnded):
+            return
+        await LUCKY.change_stream(client, update.chat_id)
+
+
 async def stop_clone_assistant(bot_id):
+    """Stop and clean up a clone assistant."""
 
     if bot_id in clone_assistants:
+        data = clone_assistants[bot_id]
         try:
-            await clone_assistants[bot_id].stop()
+            if data.get("pytgcalls"):
+                await data["pytgcalls"].stop()
+        except:
+            pass
+        try:
+            if data.get("userbot"):
+                await data["userbot"].stop()
         except:
             pass
 
@@ -67,10 +113,22 @@ async def stop_clone_assistant(bot_id):
 
 
 def get_clone_assistant(bot_id):
-    return clone_assistants.get(bot_id)
+    """Get the clone assistant's Pyrogram Client."""
+    data = clone_assistants.get(bot_id)
+    if data:
+        return data.get("userbot")
+    return None
 
 
-# ---------------- CONNECT LOGIN ---------------- #
+def get_clone_pytgcalls(bot_id):
+    """Get the clone assistant's PyTgCalls instance for voice chat ops."""
+    data = clone_assistants.get(bot_id)
+    if data:
+        return data.get("pytgcalls")
+    return None
+
+
+# ---------------- CONNECT LOGIN (Pyrogram v2) ---------------- #
 
 @Client.on_message(filters.command("connect") & filters.private)
 @language
@@ -98,25 +156,30 @@ async def connect_login(client: Client, message: Message, _):
     except:
         return await message.reply_text("Invalid format.")
 
-    string = StringSession()
-
-    app = Client(
-        string,
+    # Pyrogram v2 session generation
+    temp_client = Client(
+        f"connect_{message.from_user.id}",
         api_id=int(api_id),
         api_hash=api_hash,
         in_memory=True,
     )
 
-    await app.connect()
+    await temp_client.connect()
 
-    code = await app.send_code(phone)
+    try:
+        code = await temp_client.send_code(phone)
+    except Exception as e:
+        await temp_client.disconnect()
+        return await message.reply_text(f"Failed to send code: {e}")
 
-    await message.reply("Send OTP Code")
+    await message.reply("Send OTP Code (with spaces between digits, e.g. `1 2 3 4 5`)")
 
     otp = await client.listen(message.from_user.id)
 
+    otp_text = otp.text.replace(" ", "")
+
     try:
-        await app.sign_in(phone, code.phone_code_hash, otp.text)
+        await temp_client.sign_in(phone, code.phone_code_hash, otp_text)
 
     except SessionPasswordNeeded:
 
@@ -124,19 +187,45 @@ async def connect_login(client: Client, message: Message, _):
 
         pwd = await client.listen(message.from_user.id)
 
-        await app.check_password(pwd.text)
+        try:
+            await temp_client.check_password(pwd.text)
+        except Exception as e:
+            await temp_client.disconnect()
+            return await message.reply_text(f"2FA failed: {e}")
 
-    session_string = await app.export_session_string()
+    except Exception as e:
+        await temp_client.disconnect()
+        return await message.reply_text(f"Sign in failed: {e}")
 
-    await app.disconnect()
+    session_string = await temp_client.export_session_string()
 
-    await message.reply_text(
-        f"**Login Successful**\n\n"
-        f"`{session_string}`"
+    await temp_client.disconnect()
+
+    # Auto-set the string session for this clone bot
+    set_clone_string(bot_id, session_string)
+
+    mi = await message.reply_text("Starting assistant with generated session...")
+
+    userbot = await start_clone_assistant(bot_id, session_string)
+
+    if userbot is None:
+        return await mi.edit_text(
+            "**Login Successful but assistant failed to start.**\n\n"
+            f"Session saved. Try `/setstring {session_string}` later."
+        )
+
+    me = await userbot.get_me()
+
+    await mi.edit_text(
+        f"**Login Successful - Assistant Connected**\n\n"
+        f"User: {me.mention}\n"
+        f"Username: @{me.username}\n"
+        f"ID: `{me.id}`\n\n"
+        f"Your assistant can now join voice chats to play music!"
     )
 
 
-# ---------------- SETSTRING ---------------- #
+# ---------------- SETSTRING (Pyrogram v2 string session) ---------------- #
 
 @Client.on_message(filters.command(["setstring", "setassistant"]) & filters.private)
 @language
@@ -152,7 +241,9 @@ async def set_string_cmd(client: Client, message: Message, _):
 
     if len(message.command) < 2:
         return await message.reply_text(
-            "Usage:\n\n/setstring STRING_SESSION"
+            "**Usage:**\n\n"
+            "`/setstring PYROGRAM_V2_STRING_SESSION`\n\n"
+            "Generate one using /connect or an external tool."
         )
 
     string_session = message.text.split(None, 1)[1]
@@ -162,17 +253,18 @@ async def set_string_cmd(client: Client, message: Message, _):
     userbot = await start_clone_assistant(bot_id, string_session)
 
     if userbot is None:
-        return await mi.edit_text("Invalid string session.")
+        return await mi.edit_text("Invalid string session or failed to start.")
 
     set_clone_string(bot_id, string_session)
 
     me = await userbot.get_me()
 
     await mi.edit_text(
-        f"Assistant Connected\n\n"
+        f"**Assistant Connected**\n\n"
         f"User: {me.mention}\n"
         f"Username: @{me.username}\n"
-        f"ID: `{me.id}`"
+        f"ID: `{me.id}`\n\n"
+        f"Your assistant can now join voice chats to play music!"
     )
 
     try:
@@ -193,12 +285,12 @@ async def remove_assistant(client, message):
 
     remove_clone_string(bot_id)
 
-    await message.reply("Assistant removed.")
+    await message.reply("Assistant removed and disconnected.")
 
 
 # ---------------- ASSISTANT STATUS ---------------- #
 
-@Client.on_message(filters.command(["assistant","myassistant"]))
+@Client.on_message(filters.command(["assistant", "myassistant"]))
 @language
 async def assistant_status(client: Client, message: Message, _):
 
@@ -213,23 +305,31 @@ async def assistant_status(client: Client, message: Message, _):
     string_session = get_clone_string(bot_id)
 
     userbot = get_clone_assistant(bot_id)
+    pytgcalls = get_clone_pytgcalls(bot_id)
 
     if not string_session:
-        return await message.reply_text("No assistant set.")
+        return await message.reply_text(
+            "No assistant set.\n\n"
+            "Use /connect to login or /setstring to set a Pyrogram v2 session."
+        )
 
     if userbot:
 
         me = await userbot.get_me()
 
+        vc_status = "Active" if pytgcalls else "Not available"
+
         await message.reply_text(
-            f"Assistant Running\n\n"
-            f"{me.mention}\n"
-            f"@{me.username}\n"
-            f"`{me.id}`"
+            f"**Assistant Running**\n\n"
+            f"User: {me.mention}\n"
+            f"Username: @{me.username}\n"
+            f"ID: `{me.id}`\n"
+            f"Voice Chat: {vc_status}"
         )
 
     else:
 
         await message.reply_text(
-            "Assistant string exists but not started."
-)
+            "Assistant string exists but not started.\n"
+            "Use /setstring to restart it."
+        )

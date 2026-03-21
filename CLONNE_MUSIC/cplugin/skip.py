@@ -10,6 +10,7 @@ from CLONNE_MUSIC.utils.decorators import AdminRightsCheck
 from CLONNE_MUSIC.utils.inline import close_markup, stream_markup, stream_markup2
 from CLONNE_MUSIC.utils.stream.autoclear import auto_clean
 from CLONNE_MUSIC.utils.thumbnails import get_thumb
+from CLONNE_MUSIC.cplugin.connect import get_clone_pytgcalls
 from config import BANNED_USERS
 from CLONNE_MUSIC.utils.database.clonedb import get_owner_id_from_db, get_cloned_support_chat, get_cloned_support_channel
 
@@ -26,6 +27,7 @@ async def skip(cli, message: Message, _, chat_id):
 
     a = await cli.get_me()
     C_BOT_OWNER_ID = get_owner_id_from_db(a.id)
+    clone_ptc = get_clone_pytgcalls(a.id)
 
     C_BOT_SUPPORT_CHAT = await get_cloned_support_chat(a.id)
     C_SUPPORT_CHAT = f"https://t.me/{C_BOT_SUPPORT_CHAT}"
@@ -62,7 +64,7 @@ async def skip(cli, message: Message, _, chat_id):
                                         ),
                                         reply_markup=close_markup(_),
                                     )
-                                    await LUCKY.stop_stream(chat_id)
+                                    await LUCKY.stop_stream(chat_id, clone_pytgcalls=clone_ptc)
                                 except:
                                     return
                                 break
@@ -89,7 +91,7 @@ async def skip(cli, message: Message, _, chat_id):
                     reply_markup=close_markup(_),
                 )
                 try:
-                    return await LUCKY.stop_stream(chat_id)
+                    return await LUCKY.stop_stream(chat_id, clone_pytgcalls=clone_ptc)
                 except:
                     return
         except:
@@ -100,7 +102,7 @@ async def skip(cli, message: Message, _, chat_id):
                     ),
                     reply_markup=close_markup(_),
                 )
-                return await LUCKY.stop_stream(chat_id)
+                return await LUCKY.stop_stream(chat_id, clone_pytgcalls=clone_ptc)
             except:
                 return
     queued = check[0]["file"]
@@ -125,7 +127,7 @@ async def skip(cli, message: Message, _, chat_id):
         except:
             image = None
         try:
-            await LUCKY.skip_stream(chat_id, link, video=status, image=image)
+            await LUCKY.skip_stream(chat_id, link, video=status, image=image, clone_pytgcalls=clone_ptc)
         except:
             return await message.reply_text(_["call_6"])
         button = stream_markup2(_, chat_id)
@@ -158,7 +160,7 @@ async def skip(cli, message: Message, _, chat_id):
         except:
             image = None
         try:
-            await LUCKY.skip_stream(chat_id, file_path, video=status, image=image)
+            await LUCKY.skip_stream(chat_id, file_path, video=status, image=image, clone_pytgcalls=clone_ptc)
         except:
             return await mystic.edit_text(_["call_6"])
         button = stream_markup(_, chat_id)
@@ -178,7 +180,7 @@ async def skip(cli, message: Message, _, chat_id):
         await mystic.delete()
     elif "index_" in queued:
         try:
-            await LUCKY.skip_stream(chat_id, videoid, video=status)
+            await LUCKY.skip_stream(chat_id, videoid, video=status, clone_pytgcalls=clone_ptc)
         except:
             return await message.reply_text(_["call_6"])
         button = stream_markup2(_, chat_id)
@@ -200,7 +202,7 @@ async def skip(cli, message: Message, _, chat_id):
             except:
                 image = None
         try:
-            await LUCKY.skip_stream(chat_id, queued, video=status, image=image)
+            await LUCKY.skip_stream(chat_id, queued, video=status, image=image, clone_pytgcalls=clone_ptc)
         except:
             return await message.reply_text(_["call_6"])
         if videoid == "telegram":

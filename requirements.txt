@@ -54,10 +54,8 @@ pytz
 pytube
 py-tgcalls==0.9.7
 pyyaml==6.0.1
-python-telegram-bot
 qrcode
 requests
-SafoneAPI
 search_engine_parser
 speedtest-cli
 SpeechRecognition
@@ -73,12 +71,3 @@ yt-dlp
 youtube-search
 youtube-search-python
 flask
-# --- Official Core Libraries ---
-py-tgcalls>=1.2.0
-yt-dlp>=2024.11.0
-pyrogram>=2.0.106
-TgCrypto  # Isse speed tez hoti hai
-
-# --- Support Libraries ---
-aiohttp
-ffmpeg-python

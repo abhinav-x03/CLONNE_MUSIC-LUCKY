@@ -36,6 +36,7 @@ from CLONNE_MUSIC.cplugin.setinfo import get_logging_status, get_log_channel
 from config import BANNED_USERS, lyrical
 from time import time
 from CLONNE_MUSIC.utils.extraction import extract_user
+from CLONNE_MUSIC.cplugin.connect import get_clone_pytgcalls
 
 # Define a dictionary to track the last message timestamp for each user
 user_last_message_time = {}
@@ -853,18 +854,22 @@ async def stream(
 ):
     
     a = await client.get_me()
-    C_BOT_OWNER_ID = get_owner_id_from_db(a.id)
+    bot_id = a.id
+    C_BOT_OWNER_ID = get_owner_id_from_db(bot_id)
 
     #Cloned Bot Support Chat and channel
-    C_BOT_SUPPORT_CHAT = await get_cloned_support_chat(a.id)
+    C_BOT_SUPPORT_CHAT = await get_cloned_support_chat(bot_id)
     C_SUPPORT_CHAT = f"https://t.me/{C_BOT_SUPPORT_CHAT}"
-    C_BOT_SUPPORT_CHANNEL = await get_cloned_support_channel(a.id)
+    C_BOT_SUPPORT_CHANNEL = await get_cloned_support_channel(bot_id)
     C_SUPPORT_CHANNEL = f"https://t.me/{C_BOT_SUPPORT_CHANNEL}"
+
+    # Get clone's PyTgCalls for voice chat operations
+    clone_ptc = get_clone_pytgcalls(bot_id)
 
     if not result:
         return
     if forceplay:
-        await LUCKY.force_stop_stream(chat_id)
+        await LUCKY.force_stop_stream(chat_id, clone_pytgcalls=clone_ptc)
     if streamtype == "playlist":
         msg = f"{_['play_19']}\n\n"
         count = 0
@@ -918,6 +923,7 @@ async def stream(
                     file_path,
                     video=status,
                     image=thumbnail,
+                    clone_pytgcalls=clone_ptc,
                 )
                 await put_queue(
                     chat_id,
@@ -1008,6 +1014,7 @@ async def stream(
                 file_path,
                 video=status,
                 image=thumbnail,
+                clone_pytgcalls=clone_ptc,
             )
             await put_queue(
                 chat_id,
@@ -1064,7 +1071,7 @@ async def stream(
         else:
             if not forceplay:
                 db[chat_id] = []
-            await LUCKY.join_call(chat_id, original_chat_id, file_path, video=None)
+            await LUCKY.join_call(chat_id, original_chat_id, file_path, video=None, clone_pytgcalls=clone_ptc)
             await put_queue(
                 chat_id,
                 original_chat_id,
@@ -1116,7 +1123,7 @@ async def stream(
         else:
             if not forceplay:
                 db[chat_id] = []
-            await LUCKY.join_call(chat_id, original_chat_id, file_path, video=status)
+            await LUCKY.join_call(chat_id, original_chat_id, file_path, video=status, clone_pytgcalls=clone_ptc)
             await put_queue(
                 chat_id,
                 original_chat_id,
@@ -1178,6 +1185,7 @@ async def stream(
                 file_path,
                 video=status,
                 image=thumbnail if thumbnail else None,
+                clone_pytgcalls=clone_ptc,
             )
             await put_queue(
                 chat_id,
@@ -1234,6 +1242,7 @@ async def stream(
                 original_chat_id,
                 link,
                 video=True if video else None,
+                clone_pytgcalls=clone_ptc,
             )
             await put_queue_index(
                 chat_id,

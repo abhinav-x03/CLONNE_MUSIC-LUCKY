@@ -6,6 +6,7 @@ from CLONNE_MUSIC.core.call import LUCKY
 
 from CLONNE_MUSIC.utils.decorators import AdminRightsCheck
 from CLONNE_MUSIC.utils.inline import close_markup
+from CLONNE_MUSIC.cplugin.connect import get_clone_pytgcalls
 from config import BANNED_USERS
 from CLONNE_MUSIC import userbot
 from CLONNE_MUSIC.core.mongo import mongodb, pymongodb
@@ -81,7 +82,9 @@ async def resume_com(cli, message: Message, _, chat_id):
     if await is_music_playing(chat_id):
         return await message.reply_text(_["admin_3"])
     await music_on(chat_id)
-    await LUCKY.resume_stream(chat_id)
+    bot = await cli.get_me()
+    clone_ptc = get_clone_pytgcalls(bot.id)
+    await LUCKY.resume_stream(chat_id, clone_pytgcalls=clone_ptc)
     buttons_resume = [
         [
             InlineKeyboardButton(text="sᴋɪᴘ", callback_data=f"ADMIN Skip|{chat_id}"),
