@@ -3,7 +3,7 @@ import asyncio
 import importlib
 from pytgcalls.exceptions import NoActiveGroupCall
 from pytgcalls.pytgcalls_session import PyTgCallsSession
-
+from pyrogram import idle
 # Suppress PyTgCalls update check notification on startup
 PyTgCallsSession.notice_displayed = True
 
