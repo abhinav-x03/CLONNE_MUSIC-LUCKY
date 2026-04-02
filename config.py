@@ -158,7 +158,7 @@ START_IMG_URL = getenv(
 )
 
 HELP_IMG_URL = getenv(
-    "HELP_IMG_URL", "https://files.catbox.moe/bbu08i.jpg"
+    "HELP_IMG_URL", "https://files.catbox.moe/okwm48.jpg"
 )
 
 PING_IMG_URL = getenv(
