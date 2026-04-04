@@ -148,13 +148,13 @@ confirmer = {}
 # ------------------------------------------------------------------------
 
 CLONNE_PICS = [
-"https://files.catbox.moe/bbu08i.jpg",
-"https://files.catbox.moe/bbu08i.jpg",
+"https://files.catbox.moe/8tkumi.jpg",
+"https://files.catbox.moe/8tkumi.jpg",
 
 ]
 
 START_IMG_URL = getenv(
-    "START_IMG_URL", "https://files.catbox.moe/okwm48.jpg"
+    "START_IMG_URL", "https://files.catbox.moe/8tkumi.jpg"
 )
 
 HELP_IMG_URL = getenv(
