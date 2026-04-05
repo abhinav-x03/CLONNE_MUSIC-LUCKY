@@ -12,9 +12,9 @@ git()
 dbb()
 heroku()
 
-app = LUCKY()
-api = SafoneAPI()
+app = SHUKLA()
 userbot = Userbot()
+api = SafoneAPI()
 
 from .platforms import *
 
@@ -25,3 +25,5 @@ Spotify = SpotifyAPI()
 Resso = RessoAPI()
 Telegram = TeleAPI()
 YouTube = YouTubeAPI()
+
+APP = "InflexOwnerBot"  # connect music api key "Dont change it"
