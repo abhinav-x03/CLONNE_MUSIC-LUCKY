@@ -12,9 +12,9 @@ from typing import Union
 import yt_dlp
 from pyrogram.enums import MessageEntityType
 from pyrogram.types import Message
-from SHUKLAMUSIC.utils.formatters import time_to_seconds
+from CLONNE_MUSIC import time_to_seconds
 import aiohttp
-from SHUKLAMUSIC import LOGGER
+from CLONNE_MUSIC import LOGGER
 
 try:
     from py_yt import VideosSearch
